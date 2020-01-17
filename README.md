@@ -38,7 +38,7 @@ Azure ARM template project to deploy a Grafana container on Azure AppServices, a
 **Prerequisites**
 
 1. Create the AppRegistration for AAD authentication
-```Powershell
+```powershell
 //replace the variables with your current values
 $FrontdoorRootUrl = "https://my-grafana-frontdoor.azurefd.net"
 $MyAppRegistrationSecret = "1234567890@Grafana!"
@@ -50,7 +50,7 @@ az ad app create --display-name $FrontdoorRootUrl --identifier-uris $FrontdoorRo
 2. Edit the parameter file
 
 **Deploy the solution**
-```
+```powershell
 New-AzResourceGroupDeployment -ResourceGroupName "Grafana" -TemplateFile "azuredeploy.json" -TemplateParameterFile "azuredeploy.parameters.json"
 ```
 
