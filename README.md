@@ -22,8 +22,25 @@ Azure ARM template project to deploy a Grafana container on Azure AppServices, a
 
 [ ] Add Diagnostic logs to Frontdoor, AppServices and MySQL
 
+
+**Architecture**
+
+![Architecture diagram](/Architecture.png)
+
 **Deployment**
+
+Prerequisites
+1. Create the AppRegistration for AAD authentication
+```Powershell
+//replace the variables with your current values
+$FrontdoorRootUrl = "https://my-grafana-frontdoor.azurefd.net"
+$MyAppRegistrationSecret = "1234567890@Grafana!"
+$OAuthReplyUrl = "$FrontdoorRootUrl/login/generic_oauth"
+
+az ad app create --display-name $FrontdoorRootUrl --identifier-uris $FrontdoorRootUrl --required-resource-accesses ./manifest.json --reply-urls $OAuthReplyUrl --password $MyAppRegistrationSecret
+```
+
+Deploy the solution
 ```
 New-AzResourceGroupDeployment -ResourceGroupName "Grafana" -TemplateFile "azuredeploy.json" -TemplateParameterFile "azuredeploy.parameters.json"
 ```
-
