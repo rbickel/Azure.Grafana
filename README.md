@@ -40,6 +40,8 @@ $OAuthReplyUrl = "$FrontdoorRootUrl/login/generic_oauth"
 az ad app create --display-name $FrontdoorRootUrl --identifier-uris $FrontdoorRootUrl --required-resource-accesses ./manifest.json --reply-urls $OAuthReplyUrl --password $MyAppRegistrationSecret
 ```
 
+2. Edit the parameter file
+
 Deploy the solution
 ```
 New-AzResourceGroupDeployment -ResourceGroupName "Grafana" -TemplateFile "azuredeploy.json" -TemplateParameterFile "azuredeploy.parameters.json"
