@@ -6,10 +6,10 @@ variables:
 trigger:
   branches:
     include:
-    'master'
+    - 'master'
   paths:
     include:
-    'azuredeploy.json'
+    - 'azuredeploy.json'
          
 
 pool:
