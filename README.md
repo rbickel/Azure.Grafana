@@ -6,6 +6,7 @@ Azure ARM template project to deploy a Grafana container on Azure AppServices, a
 New-AzResourceGroupDeployment -ResourceGroupName "Grafana" -TemplateFile "azuredeploy.json" -TemplateParameterFile "azuredeploy.parameters.json"
 ```
 **Backlog**:
+
 [**X**] Implement template with Grafana container and MySQL
 
 [**X**] Secure MySQL connection with SSL and Firewall rules
