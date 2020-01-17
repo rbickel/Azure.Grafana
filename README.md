@@ -4,6 +4,8 @@ Azure ARM template project to deploy a Grafana container on Azure AppServices, a
 
 *Contribution are greatly welcomed* :)
 
+[![Deploy to Azure](https://azurecomcdn.azureedge.net/mediahandler/acomblog/media/Default/blog/deploybutton.png)](https://azuredeploy.net/)
+
 **Backlog**:
 
 [**X**] Implement template with Grafana container and MySQL
@@ -24,3 +26,4 @@ Azure ARM template project to deploy a Grafana container on Azure AppServices, a
 ```
 New-AzResourceGroupDeployment -ResourceGroupName "Grafana" -TemplateFile "azuredeploy.json" -TemplateParameterFile "azuredeploy.parameters.json"
 ```
+
