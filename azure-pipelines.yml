@@ -30,7 +30,10 @@ steps:
     script: |
       Start-Sleep 60
       '$res = wget https://my-grafana-webapp.azurefd.net'
-      return $res.StatusCode == '200'
+      if($res.StatusCode == '200')
+      {
+        exit 1
+      }
     failOnStderr: true
     pwsh: true
 
