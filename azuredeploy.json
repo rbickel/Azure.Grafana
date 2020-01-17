@@ -154,7 +154,8 @@
             "name": "[parameters('webapp_name')]",
             "location": "[parameters('region')]",
             "dependsOn": [
-                "[resourceId('Microsoft.Web/serverfarms', parameters('service_plan_name'))]"
+                "[resourceId('Microsoft.Web/serverfarms', parameters('service_plan_name'))]",
+                "[resourceId('Microsoft.DBforMySQL/servers/databases', parameters('mysql_server_name'), 'grafana')]"
             ],
             "kind": "app,linux,container",
             "properties": {
