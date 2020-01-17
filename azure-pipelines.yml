@@ -35,7 +35,7 @@ steps:
   inputs:
     targetType: 'inline'
     script: |
-      Start-Sleep 60
+      Start-Sleep 300
       $res = wget https://my-grafana-webapp.azurefd.net/Login
       write-host $res
       if($res.StatusCode -ne '200')
