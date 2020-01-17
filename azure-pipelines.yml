@@ -23,6 +23,14 @@ steps:
     csmParametersFile: 'azuredeploy.parameters.json'
     overrideParameters: '-oauth_app_id $(oauth_app_id) -oauth_app_secret "$(oauth_app_secret)" -mysql_server_admin_password "$(mysql_server_admin_password)" -oauth_app_auth_url "$(oauth_app_auth_url)" -oauth_app_token_url "$(oauth_app_token_url)"'
     deploymentMode: 'Incremental'
+
+- task: PowerShell@2
+  inputs:
+    targetType: 'inline'
+    script: '$res = wget https://my-grafana-webapp.azurefd.net'
+    failOnStderr: true
+    pwsh: true
+
 - task: AzureResourceManagerTemplateDeployment@3
   displayName: 'Delete test resource group after validation'
   enabled: false
