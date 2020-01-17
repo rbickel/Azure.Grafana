@@ -27,7 +27,9 @@ steps:
 - task: PowerShell@2
   inputs:
     targetType: 'inline'
-    script: '$res = wget https://my-grafana-webapp.azurefd.net'
+    script: |
+      '$res = wget https://my-grafana-webapp.azurefd.net'
+      return $res.StatusCode == '200'
     failOnStderr: true
     pwsh: true
 
