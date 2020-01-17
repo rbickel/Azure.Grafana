@@ -40,6 +40,7 @@ steps:
   condition: always()
   inputs:
     deploymentScope: 'Resource Group'
+    location: 'West Europe'
     azureResourceManagerConnection: 'rabickel Internal Subscription(6ff9e090-f045-45ba-adec-183d64c01b9b)'
     subscriptionId: '6ff9e090-f045-45ba-adec-183d64c01b9b'
     action: 'DeleteRG'
