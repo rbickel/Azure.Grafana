@@ -1,5 +1,7 @@
 variables:
 - group: grafana-group
+- name: resourceGroup
+  value: 'grafanatest'
 
 trigger:
 - master
@@ -14,7 +16,7 @@ steps:
     deploymentScope: 'Resource Group'
     azureResourceManagerConnection: 'rabickel Internal Subscription(6ff9e090-f045-45ba-adec-183d64c01b9b)'
     action: 'Create Or Update Resource Group'
-    resourceGroupName: 'grafanatest2'
+    resourceGroupName: '$(resourceGroup)'
     location: 'West Europe'
     templateLocation: 'Linked artifact'
     csmFile: 'azuredeploy.json'
@@ -30,4 +32,4 @@ steps:
     azureResourceManagerConnection: 'rabickel Internal Subscription(6ff9e090-f045-45ba-adec-183d64c01b9b)'
     subscriptionId: '6ff9e090-f045-45ba-adec-183d64c01b9b'
     action: 'DeleteRG'
-    resourceGroupName: 'grafanatest2'
+    resourceGroupName: '$(resourceGroup)'
