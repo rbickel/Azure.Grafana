@@ -4,7 +4,13 @@ variables:
   value: 'grafanatest'
 
 trigger:
-- master
+  branches:
+    include:
+    'master'
+  paths:
+    include:
+    'azuredeploy.json'
+         
 
 pool:
   vmImage: 'ubuntu-latest'
