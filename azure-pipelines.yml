@@ -4,6 +4,7 @@ variables:
   value: 'grafanatest'
 
 trigger:
+  batch: true
   branches:
     include:
     - 'master'
