@@ -1,0 +1,528 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "webapp_name": {
+            "defaultValue": "my-grafana-webapp",
+            "type": "String",
+            "metadata": {
+                "description": "Globally unique Webapp name"
+            }
+        },
+        "service_plan_name": {
+            "defaultValue": "my-grafana-webapp-plan",
+            "type": "String"
+        },
+        "mysql_server_name": {
+            "defaultValue": "my-grafana-webapp-mysql",
+            "type": "String",
+            "metadata": {
+                "description": "Globally unique MySQL server name"
+            }
+        },
+        "mysql_server_admin_name": {
+            "defaultValue": "grafana",
+            "type": "String"
+        },
+        "mysql_server_admin_password": {
+            "defaultValue": "Grafana2020!",
+            "type": "securestring"
+        },
+        "frontdoor_name": {
+            "defaultValue": "my-grafana-frontdoor",
+            "type": "String",
+            "metadata": {
+                "description": "Globally unique Frontdoor name"
+            }
+        },
+        "waf_policy_name": {
+            "defaultValue": "mywafpolicy",
+            "type": "String"
+        },
+        "oauth_app_id": {
+            "defaultValue": "74bc81f4-d892-478d-9829-1eea64f82ed8",
+            "type": "string"
+        },
+        "oauth_app_secret": {
+            "defaultValue": "my oauth app secret",
+            "type": "securestring"
+        },
+        "oauth_app_auth_url": {
+            "defaultValue": " https://login.microsoftonline.com/{tenantID}/oauth2/authorize",
+            "type": "string"
+        },
+        "oauth_app_token_url": {
+            "defaultValue": "https://login.microsoftonline.com/{tenantID}/oauth2/token",
+            "type": "string"
+        },
+        "webapp_max_nbr_outbount_ip": {
+            "defaultValue": 20,
+            "type": "int",
+            "metadata": {
+                "description": "Loop to add AppService Outbound IPs to MySQL Firewall. Cannot retrieve the number of IPs in the template so loop X times to add all IPs"
+            }
+        },
+        "grafana_default_plugins": {
+            "defaultValue": "grafana-clock-panel,grafana-simple-json-datasource,grafana-azure-monitor-datasource,briangann-gauge-panel,grafana-piechart-panel,raintank-worldping-app",
+            "type": "string",
+            "metadata": {
+                "description": "Default plugins added to Grafana"
+            }
+        },
+        "region": {
+            "defaultValue": "West Europe",
+            "type": "string"
+        }
+    },
+    "resources": [
+        {
+            "type": "Microsoft.DBforMySQL/servers",
+            "apiVersion": "2017-12-01",
+            "name": "[parameters('mysql_server_name')]",
+            "location": "[parameters('region')]",
+            "sku": {
+                "name": "B_Gen5_1",
+                "tier": "Basic",
+                "family": "Gen5",
+                "capacity": 1
+            },
+            "properties": {
+                "administratorLogin": "[parameters('mysql_server_admin_name')]",
+                "administratorLoginPassword": "[parameters('mysql_server_admin_password')]",
+                "createMode": "Default",
+                "storageProfile": {
+                    "storageMB": 51200,
+                    "backupRetentionDays": 7,
+                    "geoRedundantBackup": "Disabled",
+                    "storageAutoGrow": "Enabled"
+                },
+                "version": "8.0",
+                "sslEnforcement": "Enabled"
+            }
+        },
+        {
+            "type": "Microsoft.DBforMySQL/servers/databases",
+            "apiVersion": "2017-12-01",
+            "name": "[concat(parameters('mysql_server_name'), '/grafana')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.DBforMySQL/servers', parameters('mysql_server_name'))]"
+            ],
+            "properties": {
+                "charset": "utf8",
+                "collation": "utf8_general_ci"
+            }
+        },
+        {
+            "type": "Microsoft.DBforMySQL/servers/firewallRules",
+            "apiVersion": "2017-12-01",
+            "name": "[concat(parameters('mysql_server_name'), '/AllowAllWindowsAzureIps')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.DBforMySQL/servers', parameters('mysql_server_name'))]"
+            ],
+            "properties": {
+                "startIpAddress": "0.0.0.0",
+                "endIpAddress": "0.0.0.0"
+            }
+        },
+        {
+            "type": "Microsoft.Web/serverfarms",
+            "apiVersion": "2019-08-01",
+            "name": "[parameters('service_plan_name')]",
+            "location": "[parameters('region')]",
+            "sku": {
+                "name": "P1v2",
+                "tier": "PremiumV2",
+                "size": "P1v2",
+                "family": "Pv2",
+                "capacity": 1
+            },
+            "kind": "linux",
+            "properties": {
+                "perSiteScaling": false,
+                "maximumElasticWorkerCount": 1,
+                "isSpot": false,
+                "reserved": true,
+                "isXenon": false,
+                "hyperV": false,
+                "targetWorkerCount": 0,
+                "targetWorkerSizeId": 0
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2019-08-01",
+            "name": "[parameters('webapp_name')]",
+            "location": "[parameters('region')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', parameters('service_plan_name'))]"
+            ],
+            "kind": "app,linux,container",
+            "properties": {
+                "enabled": true,
+                "hostNameSslStates": [
+                    {
+                        "name": "[concat(parameters('webapp_name'), '.azurewebsites.net')]",
+                        "sslState": "Disabled",
+                        "hostType": "Standard"
+                    },
+                    {
+                        "name": "[concat(parameters('webapp_name'), '.scm.azurewebsites.net')]",
+                        "sslState": "Disabled",
+                        "hostType": "Repository"
+                    }
+                ],
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('service_plan_name'))]",
+                "reserved": true,
+                "isXenon": false,
+                "hyperV": false,
+                "scmSiteAlsoStopped": false,
+                "clientAffinityEnabled": true,
+                "clientCertEnabled": false,
+                "hostNamesDisabled": false,
+                "containerSize": 0,
+                "dailyMemoryTimeQuota": 0,
+                "httpsOnly": false,
+                "redundancyMode": "None"
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/config",
+            "apiVersion": "2019-08-01",
+            "metadata": {
+                "description": "Uses Grafana Ubuntu based images in order to secure MySQL connection with local root CA certificate"
+            },
+            "name": "[concat(parameters('webapp_name'), '/web')]",
+            "location": "[parameters('region')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('webapp_name'))]"
+            ],
+            "properties": {
+                "numberOfWorkers": 1,
+                "netFrameworkVersion": "v4.0",
+                "linuxFxVersion": "DOCKER|grafana/grafana:6.5.3-ubuntu",
+                "logsDirectorySizeLimit": 35,
+                "alwaysOn": true,
+                "managedPipelineMode": "Integrated",
+                "virtualApplications": [
+                    {
+                        "virtualPath": "/",
+                        "physicalPath": "site\\wwwroot",
+                        "preloadEnabled": true
+                    }
+                ],
+                "loadBalancing": "LeastRequests",
+                "experiments": {
+                    "rampUpRules": [
+                    ]
+                },
+                "autoHealEnabled": false,
+                "localMySqlEnabled": false,
+                "ipSecurityRestrictions": [
+                    {
+                        "ipAddress": "147.243.0.0/16",
+                        "action": "Allow",
+                        "tag": "Default",
+                        "priority": 300,
+                        "name": "FrontendIPv4",
+                        "description": "Frontend IP address"
+                    },
+                    {
+                        "ipAddress": "2a01:111:2050::/44",
+                        "action": "Allow",
+                        "tag": "Default",
+                        "priority": 400,
+                        "name": "FrontdoorIPv6"
+                    },
+                    {
+                        "ipAddress": "168.63.129.16/32",
+                        "action": "Allow",
+                        "tag": "Default",
+                        "priority": 500,
+                        "name": "AzureBasic1"
+                    },
+                    {
+                        "ipAddress": "169.254.169.254/32",
+                        "action": "Allow",
+                        "tag": "Default",
+                        "priority": 600,
+                        "name": "AzureBasic2"
+                    },
+                    {
+                        "ipAddress": "Any",
+                        "action": "Deny",
+                        "priority": 2147483647,
+                        "name": "Deny all",
+                        "description": "Deny all access"
+                    }
+                ],
+                "scmIpSecurityRestrictions": [
+                    {
+                        "ipAddress": "Any",
+                        "action": "Allow",
+                        "priority": 1,
+                        "name": "Allow all",
+                        "description": "Allow all access"
+                    }
+                ],
+                "scmIpSecurityRestrictionsUseMain": false,
+                "http20Enabled": true,
+                "minTlsVersion": "1.2",
+                "ftpsState": "AllAllowed"
+            }
+        },
+        {
+            "type": "Microsoft.DBforMySQL/servers/firewallRules",
+            "apiVersion": "2017-12-01",
+            "metadata": {
+                "description": "Loop x times to try to retrieve WebApp outbount IPs to add them to MySQL Firewall"
+            },
+            "name": "[concat(parameters('mysql_server_name'), '/AppServiceIP', copyIndex('webappips'))]",
+            "dependsOn": [
+                "[resourceId('Microsoft.DBforMySQL/servers', parameters('mysql_server_name'))]",
+                "[resourceId('Microsoft.Web/serverfarms', parameters('service_plan_name'))]",
+                "[resourceId('Microsoft.Web/sites', parameters('webapp_name'))]"
+            ],
+            "properties": {
+                "startIpAddress": "[if(greater(length(split(reference(concat('Microsoft.Web/sites/', parameters('webapp_name'))).possibleOutboundIpAddresses, ',')),copyIndex()), split(reference(concat('Microsoft.Web/sites/', parameters('webapp_name'))).possibleOutboundIpAddresses, ',')[copyIndex('webappips')], '0.0.0.0')]",
+                "endIpAddress": "[if(greater(length(split(reference(concat('Microsoft.Web/sites/', parameters('webapp_name'))).possibleOutboundIpAddresses, ',')),copyIndex()), split(reference(concat('Microsoft.Web/sites/', parameters('webapp_name'))).possibleOutboundIpAddresses, ',')[copyIndex('webappips')], '0.0.0.0')]"
+            },
+            "copy": {
+                "name": "webappips",
+                "count": "[parameters('webapp_max_nbr_outbount_ip')]"
+            }
+        },
+        {
+            "type": "Microsoft.Network/FrontDoorWebApplicationFirewallPolicies",
+            "apiVersion": "2019-10-01",
+                        "metadata": {
+                "description": "Change the action to 'Log' of all the WAF rules that returns false positive on normal Grafana usage"
+            },
+            "name": "[parameters('waf_policy_name')]",
+            "location": "Global",
+            "properties": {
+                "policySettings": {
+                    "enabledState": "Enabled",
+                    "mode": "Prevention"
+                },
+                "customRules": {
+                    "rules": [
+                    ]
+                },
+                "managedRules": {
+                    "managedRuleSets": [
+                        {
+                            "ruleSetType": "DefaultRuleSet",
+                            "ruleSetVersion": "1.0",
+                            "ruleGroupOverrides": [
+                                {
+                                    "ruleGroupName": "PROTOCOL-ATTACK",
+                                    "rules": [
+                                        {
+                                            "ruleId": "921151",
+                                            "enabledState": "Enabled",
+                                            "action": "Log"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "ruleGroupName": "XSS",
+                                    "rules": [
+                                        {
+                                            "ruleId": "941330",
+                                            "enabledState": "Enabled",
+                                            "action": "Log"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "ruleGroupName": "SQLI",
+                                    "rules": [
+                                        {
+                                            "ruleId": "942440",
+                                            "enabledState": "Enabled",
+                                            "action": "Log"
+                                        },
+                                        {
+                                            "ruleId": "942430",
+                                            "enabledState": "Enabled",
+                                            "action": "Log"
+                                        },
+                                        {
+                                            "ruleId": "942410",
+                                            "enabledState": "Enabled",
+                                            "action": "Log"
+                                        },
+                                        {
+                                            "ruleId": "942370",
+                                            "enabledState": "Enabled",
+                                            "action": "Log"
+                                        },
+                                        {
+                                            "ruleId": "942340",
+                                            "enabledState": "Enabled",
+                                            "action": "Log"
+                                        },
+                                        {
+                                            "ruleId": "942260",
+                                            "enabledState": "Enabled",
+                                            "action": "Log"
+                                        },
+                                        {
+                                            "ruleId": "942200",
+                                            "enabledState": "Enabled",
+                                            "action": "Log"
+                                        },
+                                        {
+                                            "ruleId": "942180",
+                                            "enabledState": "Enabled",
+                                            "action": "Log"
+                                        },
+                                        {
+                                            "ruleId": "942150",
+                                            "enabledState": "Enabled",
+                                            "action": "Log"
+                                        },
+                                        {
+                                            "ruleId": "942120",
+                                            "enabledState": "Enabled",
+                                            "action": "Log"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Network/frontdoors",
+            "apiVersion": "2018-08-01",
+            "name": "[parameters('frontdoor_name')]",
+            "location": "Global",
+            "properties": {
+                "resourceState": "Enabled",
+                "backendPools": [
+                    {
+                        "id": "[concat(resourceId('Microsoft.Network/frontdoors', parameters('frontdoor_name')), concat('/BackendPools/', parameters('webapp_name')))]",
+                        "name": "[parameters('webapp_name')]",
+                        "properties": {
+                            "backends": [
+                                {
+                                    "address": "[concat(parameters('webapp_name'), '.azurewebsites.net')]",
+                                    "httpPort": 80,
+                                    "httpsPort": 443,
+                                    "priority": 1,
+                                    "weight": 50,
+                                    "backendHostHeader": "[concat(parameters('webapp_name'), '.azurewebsites.net')]",
+                                    "enabledState": "Enabled"
+                                }
+                            ],
+                            "healthProbeSettings": {
+                                "id": "[concat(resourceId('Microsoft.Network/frontdoors', parameters('frontdoor_name')), '/healthProbeSettings/healthProbeSettings-1579187490612')]"
+                            },
+                            "loadBalancingSettings": {
+                                "id": "[concat(resourceId('Microsoft.Network/frontdoors', parameters('frontdoor_name')), '/loadBalancingSettings/loadBalancingSettings-1579187490612')]"
+                            },
+                            "resourceState": "Enabled"
+                        }
+                    }
+                ],
+                "healthProbeSettings": [
+                    {
+                        "id": "[concat(resourceId('Microsoft.Network/frontdoors', parameters('frontdoor_name')), '/HealthProbeSettings/healthProbeSettings-1579187490612')]",
+                        "name": "healthProbeSettings-1579187490612",
+                        "properties": {
+                            "intervalInSeconds": 5,
+                            "path": "/Login",
+                            "protocol": "Https",
+                            "resourceState": "Enabled"
+                        }
+                    }
+                ],
+                "frontendEndpoints": [
+                    {
+                        "id": "[concat(resourceId('Microsoft.Network/frontdoors', parameters('frontdoor_name')), concat('/FrontendEndpoints/', parameters('frontdoor_name'), '-azurefd-net'))]",
+                        "name": "[concat(parameters('frontdoor_name'), '-azurefd-net')]",
+                        "properties": {
+                            "hostName": "[concat(parameters('frontdoor_name'), '.azurefd.net')]",
+                            "sessionAffinityEnabledState": "Disabled",
+                            "sessionAffinityTtlSeconds": 0,
+                            "webApplicationFirewallPolicyLink": {
+                                "id": "[resourceId('Microsoft.Network/frontdoorWebApplicationFirewallPolicies', parameters('waf_policy_name'))]"
+                            },
+                            "resourceState": "Enabled"
+                        }
+                    }
+                ],
+                "loadBalancingSettings": [
+                    {
+                        "id": "[concat(resourceId('Microsoft.Network/frontdoors', parameters('frontdoor_name')), '/LoadBalancingSettings/loadBalancingSettings-1579187490612')]",
+                        "name": "loadBalancingSettings-1579187490612",
+                        "properties": {
+                            "additionalLatencyMilliseconds": 0,
+                            "sampleSize": 4,
+                            "successfulSamplesRequired": 2,
+                            "resourceState": "Enabled"
+                        }
+                    }
+                ],
+                "routingRules": [
+                    {
+                        "id": "[concat(resourceId('Microsoft.Network/frontdoors', parameters('frontdoor_name')), '/RoutingRules/https')]",
+                        "name": "https",
+                        "properties": {
+                            "frontendEndpoints": [
+                                {
+                                    "id": "[concat(resourceId('Microsoft.Network/frontdoors', parameters('frontdoor_name')), concat('/frontendEndpoints/', parameters('frontdoor_name'), '-azurefd-net'))]"
+                                }
+                            ],
+                            "acceptedProtocols": [
+                                "Https"
+                            ],
+                            "patternsToMatch": [
+                                "/*"
+                            ],
+                            "forwardingProtocol": "HttpsOnly",
+                            "backendPool": {
+                                "id": "[concat(resourceId('Microsoft.Network/frontdoors', parameters('frontdoor_name')), concat('/backendPools/', parameters('webapp_name')))]"
+                            },
+                            "enabledState": "Enabled",
+                            "resourceState": "Enabled"
+                        }
+                    }
+                ],
+                "enabledState": "Enabled",
+                "friendlyName": "[parameters('webapp_name')]"
+            }
+        },
+        {
+            "name": "[concat(parameters('webapp_name'), '/appsettings')]",
+            "type": "Microsoft.Web/sites/config",
+            "apiVersion": "2019-08-01",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('webapp_name'))]"
+            ],
+            "properties": {
+                "DOCKER_REGISTRY_SERVER_URL": "https://index.docker.io",
+                "GF_AUTH_GENERIC_OAUTH_AUTH_URL": "[parameters('oauth_app_auth_url')]",
+                "GF_AUTH_GENERIC_OAUTH_CLIENT_ID": "[parameters('oauth_app_id')]",
+                "GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET": "[parameters('oauth_app_secret')]",
+                "GF_AUTH_GENERIC_OAUTH_ENABLED": "true",
+                "GF_AUTH_GENERIC_OAUTH_NAME": "Azure AD",
+                "GF_AUTH_GENERIC_OAUTH_SCOPES": "openid email profile",
+                "GF_AUTH_GENERIC_OAUTH_TOKEN_URL": "[parameters('oauth_app_token_url')]",
+                "GF_DATABASE_CA_CERT_PATH": "/etc/ssl/certs/Baltimore_CyberTrust_Root.pem",
+                "GF_DATABASE_HOST": "[concat(parameters('mysql_server_name'),'.mysql.database.azure.com')]",
+                "GF_DATABASE_PASSWORD": "[parameters('mysql_server_admin_password')]",
+                "GF_DATABASE_SERVER_CERT_NAME": "*.mysql.database.azure.com",
+                "GF_DATABASE_SSL_MODE": "true",
+                "GF_DATABASE_TYPE": "mysql",
+                "GF_DATABASE_USER": "[concat(parameters('mysql_server_admin_name'),'@',parameters('mysql_server_name'))]",
+                "GF_INSTALL_PLUGINS": "[parameters('grafana_default_plugins')]",
+                "GF_SERVER_ROOT_URL": "[concat('https://', parameters('frontdoor_name'), '.azurefd.net')]",
+                "WEBSITES_ENABLE_APP_SERVICE_STORAGE": "true"
+            }
+        }
+    ]
+}
