@@ -32,6 +32,7 @@ steps:
     deploymentMode: 'Incremental'
 
 - task: PowerShell@2
+  enabled: false
   inputs:
     targetType: 'inline'
     script: |
