@@ -1,0 +1,39 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "webapp_name": {
+            "value": "my-grafana-webapp"
+        },
+        "service_plan_name": {
+            "value": "my-grafana-webapp"
+        },
+        "mysql_server_name": {
+            "value": "my-grafana-webapp"
+        },
+        "mysql_server_admin_name": {
+            "value": "grafana"
+        },
+        "mysql_server_admin_password": {
+            "value": "Grafana2010!"
+        },
+        "frontdoor_name": {
+            "value": "my-grafana-webapp"
+        },
+        "waf_policy_name": {
+            "value": "grafanapolicy"
+        },
+        "oauth_app_id": {
+            "value": "my app client id (Application Id)"
+        },
+        "oauth_app_secret": {
+            "value": "my secret"
+        },
+        "oauth_app_auth_url": {
+            "value": " https://login.microsoftonline.com/{tenant}/oauth2/authorize"
+        },
+        "oauth_app_token_url": {
+            "value": "https://login.microsoftonline.com/{tenant}/oauth2/token"
+        }
+    }
+}
