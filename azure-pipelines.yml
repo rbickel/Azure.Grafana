@@ -27,16 +27,23 @@ steps:
 - task: PowerShell@2
   inputs:
     targetType: 'inline'
-    script: '$res = wget https://my-grafana-webapp.azurefd.net'
+    script: |
+      Start-Sleep 60
+      '$res = wget https://my-grafana-webapp.azurefd.net'
+      if($res.StatusCode == '200')
+      {
+        exit 1
+      }
     failOnStderr: true
     pwsh: true
 
 - task: AzureResourceManagerTemplateDeployment@3
   displayName: 'Delete test resource group after validation'
-  enabled: false
+  enabled: true
   condition: always()
   inputs:
     deploymentScope: 'Resource Group'
+    location: 'West Europe'
     azureResourceManagerConnection: 'rabickel Internal Subscription(6ff9e090-f045-45ba-adec-183d64c01b9b)'
     subscriptionId: '6ff9e090-f045-45ba-adec-183d64c01b9b'
     action: 'DeleteRG'
