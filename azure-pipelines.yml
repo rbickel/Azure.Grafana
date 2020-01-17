@@ -36,8 +36,8 @@ steps:
     targetType: 'inline'
     script: |
       Start-Sleep 60
-      '$res = wget https://my-grafana-webapp.azurefd.net'
-      if($res.StatusCode == '200')
+      '$res = wget https://my-grafana-webapp.azurefd.net/Login'
+      if($res.StatusCode -eq '200')
       {
         exit 1
       }
