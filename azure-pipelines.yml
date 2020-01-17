@@ -18,7 +18,7 @@ steps:
     templateLocation: 'Linked artifact'
     csmFile: 'azuredeploy.json'
     csmParametersFile: 'azuredeploy.parameters.json'
-    overrideParameters: '-webapp_max_nbr_outbount_ip 10 -oauth_app_id $(oauth_app_id) -oauth_app_secret $(oauth_app_secret) -mysql_server_admin_password "$(mysql_server_admin_password)" -oauth_app_auth_url $(oauth_app_auth_url) -oauth_app_token_url $(oauth_app_token_url)'
+    overrideParameters: '-webapp_max_nbr_outbount_ip 10 -oauth_app_id $(oauth_app_id) -oauth_app_secret $(oauth_app_secret) -mysql_server_admin_password "Bangkmok2015!" -oauth_app_auth_url $(oauth_app_auth_url) -oauth_app_token_url $(oauth_app_token_url)'
     deploymentMode: 'Incremental'
 - task: AzureResourceManagerTemplateDeployment@3
   inputs:
