@@ -4,6 +4,9 @@
 
 Azure ARM template project to deploy a Grafana container on Azure AppServices, a MySQL Database, and secured using Firewall rules, Frontdoor and Web Application Firewall.
 
+[![Build Status](https://dev.azure.com/rabickel/Azure.Grafana/_apis/build/status/rbickel.Azure.Grafana?branchName=master)](https://dev.azure.com/rabickel/Azure.Grafana/_build/latest?definitionId=31&branchName=master)
+
+
 ### Architecture
 
 ![Architecture diagram](/Architecture.png)

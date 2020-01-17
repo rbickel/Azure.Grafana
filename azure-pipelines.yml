@@ -1,0 +1,43 @@
+variables:
+- group: grafana-group
+- name: resourceGroup
+  value: 'grafanatest'
+
+trigger:
+- master
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+- task: AzureResourceManagerTemplateDeployment@3
+  displayName: 'Deploy ARM template to test resource group'
+  inputs:
+    deploymentScope: 'Resource Group'
+    azureResourceManagerConnection: 'rabickel Internal Subscription(6ff9e090-f045-45ba-adec-183d64c01b9b)'
+    action: 'Create Or Update Resource Group'
+    resourceGroupName: '$(resourceGroup)'
+    location: 'West Europe'
+    templateLocation: 'Linked artifact'
+    csmFile: 'azuredeploy.json'
+    csmParametersFile: 'azuredeploy.parameters.json'
+    overrideParameters: '-oauth_app_id $(oauth_app_id) -oauth_app_secret "$(oauth_app_secret)" -mysql_server_admin_password "$(mysql_server_admin_password)" -oauth_app_auth_url "$(oauth_app_auth_url)" -oauth_app_token_url "$(oauth_app_token_url)"'
+    deploymentMode: 'Incremental'
+
+- task: PowerShell@2
+  inputs:
+    targetType: 'inline'
+    script: '$res = wget https://my-grafana-webapp.azurefd.net'
+    failOnStderr: true
+    pwsh: true
+
+- task: AzureResourceManagerTemplateDeployment@3
+  displayName: 'Delete test resource group after validation'
+  enabled: false
+  condition: always()
+  inputs:
+    deploymentScope: 'Resource Group'
+    azureResourceManagerConnection: 'rabickel Internal Subscription(6ff9e090-f045-45ba-adec-183d64c01b9b)'
+    subscriptionId: '6ff9e090-f045-45ba-adec-183d64c01b9b'
+    action: 'DeleteRG'
+    resourceGroupName: '$(resourceGroup)'
