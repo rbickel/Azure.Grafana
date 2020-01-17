@@ -28,6 +28,7 @@ steps:
   inputs:
     targetType: 'inline'
     script: |
+      Start-Sleep 60
       '$res = wget https://my-grafana-webapp.azurefd.net'
       return $res.StatusCode == '200'
     failOnStderr: true
@@ -35,7 +36,7 @@ steps:
 
 - task: AzureResourceManagerTemplateDeployment@3
   displayName: 'Delete test resource group after validation'
-  enabled: false
+  enabled: true
   condition: always()
   inputs:
     deploymentScope: 'Resource Group'
