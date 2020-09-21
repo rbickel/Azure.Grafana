@@ -6,7 +6,8 @@ Azure ARM template project to deploy a Grafana container on Azure AppServices, a
 
 [![Build Status](https://dev.azure.com/rabickel/Azure.Grafana/_apis/build/status/rbickel.Azure.Grafana?branchName=master)](https://dev.azure.com/rabickel/Azure.Grafana/_build/latest?definitionId=31&branchName=master)
 
-[![Deploy to Azure](https://azurecomcdn.azureedge.net/mediahandler/acomblog/media/Default/blog/deploybutton.png)](https://azuredeploy.net/)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Frbickel%2FAzure.Grafana%2Fmaster%2Fazuredeploy.json)
+
 
 ### Architecture
 
